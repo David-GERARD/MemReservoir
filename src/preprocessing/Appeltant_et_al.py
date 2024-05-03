@@ -1,9 +1,18 @@
+# This file contains the code to encode signals to be fed to a delay-dynamical reservoir computing system, as described in the paper by Appeltant et al. (2011).
+# https://doi.org/10.1038/ncomms1476
+
+# Code by David Gerard
+# Email: david.gerard.23@ucl.ac.uk
+
+
+
 import torch
 import numpy as np
 import sys
 import os
 import pandas as pd
 import argparse
+
 
 
 def sampleAndHold(u, t, tau, ts=None):
@@ -105,7 +114,7 @@ def applyMask(I,M):
 
 
 
-# Example usage
+# if used as a script
 if __name__ == "__main__":
     # Parsing arguments
     parser=argparse.ArgumentParser(description="Preprocessing script for memristor based reservoir computing")

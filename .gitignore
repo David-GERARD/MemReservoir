@@ -1,2 +1,4 @@
 .DS_Store
 development.ipynb
+audio_data/*
+__pycache__/

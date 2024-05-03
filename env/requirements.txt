@@ -1,5 +1,12 @@
 ipykernel
 jupyter
-numpy
+
 pandas
 torch
+argparse
+pyspice
+hub
+av
+flask
+scipy
+pytest

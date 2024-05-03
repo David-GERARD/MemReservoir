@@ -1,3 +1,5 @@
+# Code by David Gerard https://github.com/David-GERARD 
+
 import hub
 import numpy as np
 from .trimmer import trim_silence
@@ -5,7 +7,7 @@ import os
 import pandas as pd
 from scipy.io import wavfile
 import torch
-                    
+import random
 
 class SpokenMnistWrapperAPI:
     """
@@ -158,32 +160,51 @@ class SpokenMnistWrapperAPI:
         sample = []
         indices = []
 
-        if digits is None:
-            indices = range(len(self.dataset))
+
+        idx_shuffled = np.arange(len(self.dataset))
+        np.random.shuffle(idx_shuffled)
+
+        j = 0
+
+        if sample_size is None:
+            sample_size = len(self.dataset)
         else:
-            for i in range(len(self.dataset)):
+            if sample_size == len(self.dataset):
+                raise ValueError("The sample size is equal to the size of the dataset. Please specify a smaller sample size, or leave the field empty if you want all the samples fitting the other criterions.")
+
+        while len(indices) < sample_size and j < len(self.dataset):
+            i = idx_shuffled[j]
+            valid = True
+
+            if digits is not None:
                 label = self.get_label_from_index(i)
-                if label in digits:
-                    indices.append(i)
+                if label not in digits:
+                    valid = False
 
-        if speakers is not None:
-            indices = [i for i in indices if self.get_speaker_from_index(i) in speakers]
+            if speakers is not None:
+                speaker = self.get_speaker_from_index(i)
+                if speaker not in speakers:
+                    valid = False
+            
+            if min_length is not None:
+                audio = self.get_audio_from_index(i).numpy()
+                if len(audio) < min_length:
+                    valid = False
+            
+            if max_length is not None:
+                audio = self.get_audio_from_index(i).numpy()
+                if len(audio) > max_length:
+                    valid = False
 
-        if min_length is not None:
-            indices = [i for i in indices if len(self.get_audio_from_index(i)) > min_length]
+            if valid:
+                indices.append(i) 
+            
+            j+=1
 
-        if max_length is not None:
-            indices = [i for i in indices if len(self.get_audio_from_index(i)) < max_length]
+        if len(indices) < sample_size and sample_size < len(self.dataset): # the second condition is false if the user didn't specify a sample size
+            raise ValueError("Not enough items in the dataset that match the specified criteria.")
 
-        if sample_size is not None:
-            if len(indices) < sample_size:
-                raise ValueError("Not enough items in the dataset that match the specified criteria.")
-            sample_indices = np.array(indices)[np.random.randint(low=0, high=len(indices) - 1, size=sample_size)]
-        else:
-            sample_indices = np.array(indices)
-
-        if len(sample_indices) ==0 :
-                raise ValueError("Not enough items in the dataset that match the specified criteria.")
+        sample_indices = np.array(indices)
 
         for index in sample_indices:
             sample.append(self.get_item_from_index(index))
@@ -368,32 +389,51 @@ class SpokenMnistWrapperLocal:
         sample = []
         indices = []
 
-        if digits is None:
-            indices = range(len(self.dataset))
+
+        idx_shuffled = np.arange(len(self.dataset))
+        np.random.shuffle(idx_shuffled)
+
+        j = 0
+
+        if sample_size is None:
+            sample_size = len(self.dataset)
         else:
-            for i in range(len(self.dataset)):
+            if sample_size == len(self.dataset):
+                raise ValueError("The sample size is equal to the size of the dataset. Please specify a smaller sample size, or leave the field empty if you want all the samples fitting the other criterions.")
+
+        while len(indices) < sample_size and j < len(self.dataset):
+            i = idx_shuffled[j]
+            valid = True
+
+            if digits is not None:
                 label = self.get_label_from_index(i)
-                if label in digits:
-                    indices.append(i)
+                if label not in digits:
+                    valid = False
 
-        if speakers is not None:
-            indices = [i for i in indices if self.get_speaker_from_index(i) in speakers]
+            if speakers is not None:
+                speaker = self.get_speaker_from_index(i)
+                if speaker not in speakers:
+                    valid = False
+            
+            if min_length is not None:
+                audio = self.get_audio_from_index(i)
+                if len(audio) < min_length:
+                    valid = False
+            
+            if max_length is not None:
+                audio = self.get_audio_from_index(i)
+                if len(audio) > max_length:
+                    valid = False
 
-        if min_length is not None:
-            indices = [i for i in indices if len(self.get_audio_from_index(i)) > min_length]
+            if valid:
+                indices.append(i) 
+            
+            j+=1
 
-        if max_length is not None:
-            indices = [i for i in indices if len(self.get_audio_from_index(i)) < max_length]
+        if len(indices) < sample_size and sample_size < len(self.dataset): # the second condition is false if the user didn't specify a sample size
+            raise ValueError("Not enough items in the dataset that match the specified criteria.")
 
-        if sample_size is not None:
-            if len(indices) < sample_size:
-                raise ValueError("Not enough items in the dataset that match the specified criteria.")
-            sample_indices = np.array(indices)[np.random.randint(low=0, high=len(indices) - 1, size=sample_size)]
-        else:
-            sample_indices = np.array(indices)
-
-        if len(sample_indices) ==0 :
-                raise ValueError("Not enough items in the dataset that match the specified criteria.")
+        sample_indices = np.array(indices)
 
         for index in sample_indices:
             sample.append(self.get_item_from_index(index))

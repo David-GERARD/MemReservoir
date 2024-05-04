@@ -1,7 +1,16 @@
 # Memristor-Enabled Reservoir Computing for Spoken-MNIST Digit Recognition
 
 ## Project Overview
-In this project, we present a Python pipeline system designed to simulate memristor behavior within RC frameworks. By optimizing memristor model parameters, our objective is to achieve superior accuracy and reduce output layer training time.
+In this project, we present a Python pipeline system designed to simulate memristor behavior within reservoir computing frameworks. By optimizing memristor model parameters, our objective is to achieve superior accuracy and reduce output layer training time.
+
+### Memristors
+A memristor is a two-terminal electronic component whose resistance changes based on the history of the electric charge that has flowed through it, exhibiting memory-like behavior.
+
+The concept of the memristor was theorized by Leon Chua in 1971. However, the first physical realization of a memristor was reported by HP Labs researchers in 2008.
+
+### Reservoir computing 
+Reservoir Computing (RC) is a computational framework for processing sequential data, particularly suited for tasks like time-series prediction and pattern recognition. It involves feeding input data into a fixed, often randomly initialized, high-dimensional dynamical system called the "reservoir." The reservoir's complex dynamics transform the input data nonlinearly, creating rich representations that can be further processed to achieve desired outputs through a trainable readout layer. This separation of feature extraction (done by the reservoir) and output generation (done by the readout layer) simplifies training and often leads to efficient and high-performing models.
+
 
 ## Key Objectives
 - Memristor Simulation: Develop a flexible simulator capable of emulating memristor functionality within RC architectures.

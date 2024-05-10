@@ -1,4 +1,5 @@
 .DS_Store
 development.ipynb
 audio_data/*
+processed_data/*
 __pycache__/

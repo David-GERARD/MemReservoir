@@ -29,7 +29,7 @@ class JohnMoonEtAlPreprocessor:
         generate_spike_trains(digitized_coch, dt): Generate a spike train from the digitized cochleagram.
         process_audio(audio, dt): Process the audio data for the spoken MNIST dataset.
     """
-    def __init__(self, decimation_factor=100, step_factor=0.4, digitialize_threshold=0.08, spike_amplitude=3.0, spike_width=10e-6, step_length=250e-6):
+    def __init__(self, decimation_factor=100, step_factor=0.4, digitialize_threshold=0.4, spike_amplitude=3.0, spike_width=10e-6, step_length=250e-6):
         """
         Initialize the JohnMoonEtAlPreprocessor.
         
@@ -54,7 +54,7 @@ class JohnMoonEtAlPreprocessor:
         self.spike_width = spike_width # s
         self.step_length = step_length # s
     
-    def lyon_passive_ear(self, waveform, sample_rate):
+    def lyon_passive_ear(self, waveform, sample_rate, normalize):
         """
         Compute the cochleagram of a waveform using the Lyon passive ear model. 
 
@@ -66,6 +66,8 @@ class JohnMoonEtAlPreprocessor:
         """
         calc = LyonCalc()
         coch = calc.lyon_passive_ear(waveform, sample_rate = sample_rate, decimation_factor = self.decimation_factor, step_factor = self.step_factor).T
+        if normalize:
+            coch = coch/np.max(coch)
         return coch
     
     def digitialize(self, coch):
@@ -128,7 +130,7 @@ class JohnMoonEtAlPreprocessor:
 
 
 
-    def process_audio(self, audio, sample_rate=8000, dt=5e-6, plot_coch=False, plot_digitized_coch=False): 
+    def process_audio(self, audio, sample_rate=8000, dt=5e-6, normalize = True,  plot_coch=False, plot_digitized_coch=False): 
         """
         Parameters:
         - audio (numpy.ndarray): The audio data to process. 
@@ -140,7 +142,7 @@ class JohnMoonEtAlPreprocessor:
         - spikes (numpy.ndarray): The generated spike trains
         """
 
-        coch = self.lyon_passive_ear(audio,sample_rate)
+        coch = self.lyon_passive_ear(audio,sample_rate, normalize = normalize)
         digitized_coch = self.digitialize(coch)
         t, spikes = self.generate_spike_trains(digitized_coch, dt)
         if plot_coch:
@@ -199,19 +201,22 @@ class YananZhongEtAlPreprocessor:
 
         
     
-    def lyon_passive_ear(self, waveform, sample_rate):
+    def lyon_passive_ear(self, waveform, sample_rate, normalize):
         """
         Compute the cochleagram of a waveform using the Lyon passive ear model. 
 
         Parameters:
         - waveform (numpy.ndarray): The audio waveform
-        - sample_rate (int): The sample rate of the waveform
+        - sample_rate (int): The sample rate of the audio waveform
+        - normalize (bool): Whether to normalize the cochleagram
 
         Returns:
-        - coch (numpy.ndarray): The cochleagram, a 2D array representing the spectral content of the waveform
+        - coch (numpy.ndarray): The cochleagram
         """
         calc = LyonCalc()
-        coch = calc.lyon_passive_ear(waveform, sample_rate=sample_rate, decimation_factor=self.decimation_factor, step_factor=self.step_factor).T
+        coch = calc.lyon_passive_ear(waveform, sample_rate = sample_rate, decimation_factor = self.decimation_factor, step_factor = self.step_factor).T
+        if normalize:
+            coch = coch/np.max(coch)
         return coch
     
     
@@ -314,7 +319,7 @@ class YananZhongEtAlPreprocessor:
             return J
 
 
-    def process_audio(self, audio, sample_rate=8000, dt=500e-6, n_cycles=5, plot_coch=False):
+    def process_audio(self, audio, sample_rate=8000, dt=500e-6, n_cycles=5, normalize = True, plot_coch=False):
         """
         Process the audio data and generate spike trains.
 
@@ -331,7 +336,7 @@ class YananZhongEtAlPreprocessor:
         """
 
         # Compute the cochleagram
-        self.coch = self.lyon_passive_ear(audio, sample_rate)
+        self.coch = self.lyon_passive_ear(audio, sample_rate, normalize = normalize)
         amplitude_coef = self.voltage_amplitude / np.max(self.coch)
         if plot_coch:
             self.plot_cochleagram(self.coch)

@@ -1,0 +1,128 @@
+import os
+import torch
+
+class FullyConnected:
+    """
+    A simple output layer for a reservoir computer. It is a fully connected linear layer followed by a softmax layer.
+
+    Attributes:
+    RC_output_layer (torch.nn.Sequential): the output layer
+    loss_fn (torch.nn.CrossEntropyLoss): the loss function
+    optimizer (torch.optim.Adam): the optimizer
+
+    Methods:
+    forward: forward pass
+    train_epoch: train the model for one epoch
+    train: train the model for multiple epochs
+    save: save the model to a file
+    
+    """
+
+    def __init__(self, n_input, n_output, bias=True, name = "RC_output_layer"):
+        """
+        Parameters:
+        n_input (int): number of input nodes
+        n_output (int): number of output nodes
+        bias (bool): whether to use a bias term in the linear layer
+
+        """
+        self.RC_output_layer = torch.nn.Sequential()
+        self.RC_output_layer.add_module('output', torch.nn.Linear(n_input, n_output))
+        self.RC_output_layer.add_module('softmax', torch.nn.Softmax(dim=1))
+
+        self.loss_fn = torch.nn.CrossEntropyLoss()
+        self.optimizer = torch.optim.Adam(self.RC_output_layer.parameters(), lr=0.001)
+
+        self.name = name
+
+    def forward(self, x):
+        """
+
+        Parameters:
+        x (torch.Tensor): input tensor
+
+        Returns:
+        torch.Tensor: output tensor
+
+        """
+        return self.RC_output_layer(x)
+    
+    def train_epoch(self, x, y):
+        """
+        
+        Parameters:
+        x (torch.Tensor): input tensor
+        y (torch.Tensor): target tensor
+
+        Returns:
+        torch.Tensor: loss
+        """
+        y_pred = self.forward(x)
+        loss = self.loss_fn(y_pred, y)
+        loss.backward()
+        self.optimizer.step()
+        return loss
+    
+    def train(self, x_train, y_train, x_test = None, y_test = None, epochs=10, verbose = True):
+        """
+        Train the model for multiple epochs
+
+        Parameters:
+        x (torch.Tensor): input tensor
+        y (torch.Tensor): target tensor
+        epochs (int): number of epochs
+        verbose (bool): whether to print the loss
+
+        Returns:
+        history (list): list of losses
+
+        """
+
+        history = {"loss":[]}
+        if x_test is not None:
+            history["test_loss"] = []
+        for epoch in range(epochs):
+            loss = self.train_epoch(x_train, y_train)
+
+            if x_test is not None:
+
+                y_pred = self.forward(x_test)
+                test_loss = self.loss_fn(y_pred, y_test)
+
+                history["loss"].append(loss.item())
+                history["test_loss"].append(test_loss.item())
+
+                if verbose:
+                        print(f'Epoch {epoch} loss: {loss}, test loss: {test_loss}')
+            else:
+                test_loss = None
+
+                if verbose:
+                    print(f'Epoch {epoch} loss: {loss}')
+                history["loss"].append(loss.item())
+
+        return history
+    
+    def save(self, path):
+        """
+        Save the model to a file
+
+        Parameters:
+        path (str): path to the file
+
+        
+
+        """
+        if not os.path.exists(os.path.dirname(path)):
+            os.makedirs(os.path.dirname(path))
+        torch.save(self.RC_output_layer.state_dict(), os.path.join(path, self.name + ".pickle"))
+
+    def load(self, path):
+        """
+        Load the model from a pickle file
+
+        Parameters:
+        path (str): path to the file
+
+        """
+        self.RC_output_layer.load_state_dict(torch.load(path))

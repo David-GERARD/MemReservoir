@@ -9,3 +9,4 @@ av
 flask
 scipy
 pytest
+scikit-learn

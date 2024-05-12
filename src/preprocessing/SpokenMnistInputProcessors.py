@@ -29,7 +29,7 @@ class JohnMoonEtAlPreprocessor:
         generate_spike_trains(digitized_coch, dt): Generate a spike train from the digitized cochleagram.
         process_audio(audio, dt): Process the audio data for the spoken MNIST dataset.
     """
-    def __init__(self, decimation_factor=100, step_factor=0.4, digitialize_threshold=0.4, spike_amplitude=3.0, spike_width=10e-6, step_length=250e-6):
+    def __init__(self, decimation_factor=100, step_factor=0.4, digitialize_threshold=0.4, voltage_amplitude=3.0, spike_width=10e-6, step_length=250e-6):
         """
         Initialize the JohnMoonEtAlPreprocessor.
         
@@ -50,7 +50,7 @@ class JohnMoonEtAlPreprocessor:
         self.digitialize_threshold = digitialize_threshold
 
         # Spike generation parameters
-        self.spike_amplitude = spike_amplitude # V
+        self.spike_amplitude = voltage_amplitude # V
         self.spike_width = spike_width # s
         self.step_length = step_length # s
     
@@ -346,13 +346,11 @@ class YananZhongEtAlPreprocessor:
 
         # Masking
         M = self.generateMask(sampled_coch.shape[0], self.N)
-        print(M.shape, sampled_coch.shape)
         masked_coch = self.applyMask(sampled_coch, M)
 
         # Time upsampling
-        n_points = int(self.theta / dt) * masked_coch.shape[1]
-        print(n_points)
-        upsampled_coch = self.sampleAndInterpolate(masked_coch, n_points)  # TODO: question about upsampling method
+        n_points = int(self.theta / dt * masked_coch.shape[1])
+        upsampled_coch = self.sampleAndInterpolate(masked_coch, n_points) 
 
         # Generate input voltages by repeating the upsampled cochleagram over n_cycles
         input_voltages = np.zeros((upsampled_coch.shape[0], n_points * n_cycles))
@@ -361,5 +359,6 @@ class YananZhongEtAlPreprocessor:
 
         # Generate the time array
         t = np.linspace(0, n_cycles * self.tau, n_points * n_cycles)
+        
 
         return t, input_voltages

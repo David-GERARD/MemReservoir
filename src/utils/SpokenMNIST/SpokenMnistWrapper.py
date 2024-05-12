@@ -116,6 +116,7 @@ class SpokenMnistWrapperAPI:
         - item (dict): A dictionary containing audio, spectrogram, label, and speaker data.
         """
         return {
+            'spokenMNISTindex':index,
             'audio': self.get_audio_from_index(index),
             'spectrograms': self.get_spectrogram_from_index(index),
             'labels': self.get_label_from_index(index),

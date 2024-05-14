@@ -1,5 +1,6 @@
 import os
 import torch
+import numpy as np
 
 class FullyConnected:
     """
@@ -18,7 +19,7 @@ class FullyConnected:
     
     """
 
-    def __init__(self, n_input, n_output, bias=True, name = "RC_output_layer"):
+    def __init__(self, n_input, n_output,lr = 0.001, bias=True, name = "RC_output_layer"):
         """
         Parameters:
         n_input (int): number of input nodes
@@ -31,7 +32,7 @@ class FullyConnected:
         self.RC_output_layer.add_module('softmax', torch.nn.Softmax(dim=1))
 
         self.loss_fn = torch.nn.CrossEntropyLoss()
-        self.optimizer = torch.optim.Adam(self.RC_output_layer.parameters(), lr=0.001)
+        self.optimizer = torch.optim.Adam(self.RC_output_layer.parameters(), lr=lr)
 
         self.name = name
 
@@ -126,3 +127,50 @@ class FullyConnected:
 
         """
         self.RC_output_layer.load_state_dict(torch.load(path))
+
+
+
+
+def getVirtualNodeIndexes(N, tau, t):
+    theta = tau / N
+    indexes = [0]
+    for i in range(len(t)):
+        if t[i] > theta * (len(indexes)):
+            indexes.append(i)
+
+    return indexes
+
+def prepareDataForOutputLayer(sample, N, tau):
+    """
+    Prepare the data for the output layer by selecting the value at the time of the virtual nodes of each channel, and concatenating them.
+    
+    If there are K channels, and N virtual nodes, the input tensor will have K*N elements per period tau
+    
+    Parameters:
+    sample (list): list of samples
+    N (int): number of nodes in the reservoir
+    tau (float): time constant of the reservoir
+
+    Returns:
+    X (torch.Tensor): input tensor
+    Y (torch.Tensor): target tensor
+
+    """
+    X = []
+    Y = []
+
+    for item in sample:
+        indexes = getVirtualNodeIndexes(N, tau, item['t'])
+        x = np.zeros(len(indexes)*len(item['channels']))
+                    
+        for i in range(len(item['channels'])):
+            x[i*len(indexes):(i+1)*len(indexes)] = item['channels'][i][indexes]
+        
+
+        X.append(x)
+        Y.append(item['label'])
+
+    X = torch.tensor(X).float()
+    Y = torch.nn.functional.one_hot(torch.tensor(np.array(Y).astype(int)), 10).float()
+
+    return X, Y

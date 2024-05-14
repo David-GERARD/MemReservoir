@@ -10,3 +10,4 @@ flask
 scipy
 pytest
 scikit-learn
+tqdm

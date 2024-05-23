@@ -3,6 +3,8 @@ import os
 from datetime import datetime
 from .SpokenMnistInputProcessors import YananZhongEtAlPreprocessor
 
+from src.utils.pickleFilesTools import saveProcessedItemToPickle
+
 def processSample(sample, preprocessor = "YananZhongEtAlPreprocessor", preprocessor_params = None, voltage_output_params = None, save_directory_path = None):
     """
     
@@ -86,12 +88,12 @@ def processSample(sample, preprocessor = "YananZhongEtAlPreprocessor", preproces
             else:
                 tau = 10 # default value
 
-            if "volatage_amplitude" in preprocessor_params:
-                volatage_amplitude = preprocessor_params["volatage_amplitude"]
+            if "voltage_amplitude" in preprocessor_params:
+                voltage_amplitude = preprocessor_params["voltage_amplitude"]
             else:
-                volatage_amplitude = 2 # default value
+                voltage_amplitude = 2 # default value
 
-            processing = YananZhongEtAlPreprocessor(decimation_factor=decimation_factor, step_factor=step_factor, N = N, tau = tau,voltage_amplitude=volatage_amplitude)
+            processing = YananZhongEtAlPreprocessor(decimation_factor=decimation_factor, step_factor=step_factor, N = N, tau = tau,voltage_amplitude=voltage_amplitude)
 
         elif preprocessor == "JohnMoonEtAlPreprocessor": # TODO: add support for JohnMoonEtAlPreprocessor
             print("JohnMoonEtAlPreprocessor not supported yet")
@@ -167,16 +169,7 @@ def processSample(sample, preprocessor = "YananZhongEtAlPreprocessor", preproces
         processed_item['channels'] = channels
 
         if save_directory_path is not None:
-            # Create the directory if it does not exist
-            if not os.path.exists(save_directory_path):
-                raise ValueError("The directory does not exist")
-            else:
-                # Create the file path
-                file_path = save_directory_path + "/sample"+str(item['spokenMNISTindex'])+".pickle"
-
-                # Write the processed_item to the pickle file
-                with open(file_path, 'wb') as file:
-                    pickle.dump(processed_item, file)
+            saveProcessedItemToPickle(processed_item, save_directory_path)
                 
         processed_sample.append(processed_item)
 
@@ -202,25 +195,3 @@ def processSample(sample, preprocessor = "YananZhongEtAlPreprocessor", preproces
     return processed_sample
 
 
-def loadProcessedSample(folder_path):
-    """
-    Load all pickle files in a folder and return a list of the loaded data.
-
-    Parameters:
-    folder_path (str): Path to the folder containing the pickle files.
-
-    Returns:
-    list: List of loaded data.
-    
-    """
-    pickle_files = [file for file in os.listdir(folder_path) if file.endswith(".pickle")]
-
-    data_list = []
-
-    for file in pickle_files:
-        file_path = os.path.join(folder_path, file)
-        with open(file_path, 'rb') as f:
-            data = pickle.load(f)
-            data_list.append(data)
-
-    return data_list

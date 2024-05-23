@@ -79,6 +79,16 @@ class FullyConnected:
 
         """
 
+        if not isinstance(x_train, torch.Tensor):
+            x_train = torch.tensor(x_train).float()
+        if not isinstance(y_train, torch.Tensor):
+            y_train = torch.tensor(y_train).long()
+
+        if x_test is not None and not isinstance(x_test, torch.Tensor):
+            x_test = torch.tensor(x_test).float()
+        if y_test is not None and not isinstance(y_test, torch.Tensor):
+            y_test = torch.tensor(y_test).long()
+
         history = {"loss":[]}
         if x_test is not None:
             history["test_loss"] = []
@@ -86,6 +96,8 @@ class FullyConnected:
             loss = self.train_epoch(x_train, y_train)
 
             if x_test is not None:
+
+                
 
                 y_pred = self.forward(x_test)
                 test_loss = self.loss_fn(y_pred, y_test)
@@ -164,13 +176,12 @@ def prepareDataForOutputLayer(sample, N, tau):
         x = np.zeros(len(indexes)*len(item['channels']))
                     
         for i in range(len(item['channels'])):
-            x[i*len(indexes):(i+1)*len(indexes)] = item['channels'][i][indexes]
+            x[i*len(indexes):(i+1)*len(indexes)] = item['channels'][i][indexes].reshape(-1)
         
 
         X.append(x)
         Y.append(item['label'])
 
     X = torch.tensor(X).float()
-    Y = torch.nn.functional.one_hot(torch.tensor(np.array(Y).astype(int)), 10).float()
-
+    Y = torch.tensor(np.array(Y).astype(int))
     return X, Y

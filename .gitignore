@@ -3,3 +3,5 @@
 audio_data/*
 processed_data/*
 __pycache__/
+
+data/*

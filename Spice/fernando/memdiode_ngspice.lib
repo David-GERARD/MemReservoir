@@ -1,0 +1,50 @@
+* Correct model
+***************
+.SUBCKT memdiode p n H H0=0 Vset=0.8 Rleak=10
+.param beta=5.000e-01
+.param imax=2.000e-04
+.param imin=2.000e-06
+.param rsmax=1.000e+00
+.param rsmin=1.000e+00
+.param alphamin=6.190e+00
+.param alphamax=5.220e+00
+.param ch0=1.000e+00
+.param etaset=1.500e+01
+.param vset={Vset}
+.param etares=4.000e+00
+.param vres=-1.300e+00
+.param vt=1.000e-01
+.param gam=9.000e-01
+.param gam0=0.000e+00
+.param isb=1.000e+00
+.param EI=1e-15
+.param RPP=1e9
+ 
+*Auxiliary functions
+*--------------------------------------------------------------------------------------------
+.func I0(x)='{imax}*x+{imin}*(1-x)'
+.func A(x)='{alphamax}*x+{alphamin}*(1-x)'
+.func RS(x)='{rsmax}*x+{rsmin}*(1-x)'
+.func Stau(x)='exp(min(max({-etaset}*(x-VSB(i(VS))),-67),67))'
+.func Rtau(x)='exp(min(max({etares}*ISF(V(H))*(x-{vres}),-67),67))'
+.func VSB(x)='ternary_fcn(x>{isb}, {vt}, {vset})'
+.func ISF(x)='ternary_fcn(gam>0 || gam<0, {x**gam}, 1)'
+ 
+*H-V
+*--------------------------------------------------------------------------------------------
+GV 0 H cur='ternary_fcn(V(p,n)>=0,(1-V(H))/{Stau(V(p,n))},(-V(H))/{Rtau(V(p,n))})'
+CH H 0 {CH0} IC={H0}
+RH H 0 {Rleak}
+
+*Alternative H-V
+*--------------------------------------------------------------------------------------------
+*EV A 0 vol='ternary_fcn(V(p,n)>=0,1,0)'
+*Rh H A r='ternary_fcn(V(p,n)>=0, {Stau(V(D,n))}, {Rtau(V(D,n))})'
+*CH H 0 {CH0} IC={H0}
+ 
+*I-V
+*--------------------------------------------------------------------------------------------
+RS p Dp r='RS(V(H))'
+VS Dp D DC 0.0 AC 0.0
+GD D n cur='I0(V(H))*(exp({beta}*A(V(H))*V(D,n))-exp(-(1-{beta})*A(V(H))*V(D,n)))+{EI}'
+.ENDS
